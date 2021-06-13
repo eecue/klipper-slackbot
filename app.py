@@ -70,15 +70,16 @@ def show_printer_status(client, message, say):
     ts = response['file']['shares']['public'][message['channel']][0]['ts']
 
     pd = get_moonraker_status()
-    print_time = time.strftime('%H:%M:%S', time.gmtime(pd["print_stats"]["print_duration"]))
-    remaining_time = time.strftime('%H:%M:%S', time.gmtime(pd["metadata"]["estimated_time"]))
+    print_time = time.strftime('%H:%M', time.gmtime(pd["print_stats"]["print_duration"]))
+    total_time = time.strftime('%H:%M', time.gmtime(pd["metadata"]["estimated_time"]))
+    remaining_time = time.strftime('%H:%M', time.gmtime(pd["metadata"]["estimated_time"] - pd["print_stats"]["print_duration"]))
     percent_complete = int(100 * pd['display_status']['progress'])
 
     block_message = [{
         "type": "header",
         "text": {
           "type": "plain_text",
-          "text": f"Printing: {pd['print_stats']['filename']} - {pd['print_stats']['state']} - {percent_complete}%",
+          "text": f"{pd['print_stats']['filename']} - {pd['print_stats']['state']} - {percent_complete}% - {total_time} remaining",
           "emoji": True
         }
       },
@@ -115,9 +116,9 @@ def show_printer_status(client, message, say):
           "type": "mrkdwn",
           "text": f":bed::thermometer: {round(pd['heater_bed']['temperature'],2)}° ({int(100 * pd['heater_bed']['power'])}%)\n\
 :syringe::thermometer: {round(pd['extruder']['temperature'],2)}° ({int(100 * pd['extruder']['power'])}%)\n\
-:round_pushpin:   x:{round(pd['toolhead']['position'][0],2)}mm y:{round(pd['toolhead']['position'][1],2)}mm z:{round(pd['toolhead']['position'][2],2)}mm e:{round(pd['toolhead']['position'][3],2)}mm \n\
-:cyclone:   {pd['fan']['speed']}%\n\
-:clock3:   {print_time} / {remaining_time}\n\
+:round_pushpin:   x:{round(pd['toolhead']['position'][0])} y:{round(pd['toolhead']['position'][1])} z:{round(pd['toolhead']['position'][2],2)}mm\n\
+:cyclone:   {int(100*pd['fan']['speed'])}%\n\
+:clock3:   {print_time} / {total_time}\n\
 :thread:  {round(pd['print_stats']['filament_used']/1000)}m / {round(pd['metadata']['filament_total']/1000)}m        "
         }
       },
