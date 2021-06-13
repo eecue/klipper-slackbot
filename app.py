@@ -79,7 +79,7 @@ def show_printer_status(client, message, say):
         "type": "header",
         "text": {
           "type": "plain_text",
-          "text": f"{pd['print_stats']['filename']} - {pd['print_stats']['state']} - {percent_complete}% - {total_time} remaining",
+          "text": f"{pd['print_stats']['filename']} - {pd['print_stats']['state']} - {percent_complete}% - {remaining_time} remaining",
           "emoji": True
         }
       },
