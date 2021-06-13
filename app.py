@@ -3,6 +3,7 @@ import requests
 import logging
 import time
 from dotenv import load_dotenv
+from requests.api import get
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
@@ -29,8 +30,17 @@ def download_image():
 def get_moonraker_status():
   response = requests.get(f"{moonraker_url}/printer/objects/query?gcode_move&toolhead&extruder=target,temperature&display_status&mcu&heaters&system_stats&fan&extruder&heater_bed&print_stats")
   json_data = response.json()["result"]["status"]
+  json_data["metadata"] = get_gcode_metadata(json_data['print_stats']['filename'])
+  #logger.error(json_data)
+  return json_data
+
+
+def get_gcode_metadata(gcode_filename):
+  response = requests.get(f"{moonraker_url}/server/database/item?namespace=gcode_metadata")
+  json_data = response.json()["result"]["value"][gcode_filename]
   # logger.error(json_data)
   return json_data
+
 
 # @app.command("/klipper")
 # def repeat_text(ack, say, command):
@@ -61,7 +71,7 @@ def show_printer_status(client, message, say):
 
     pd = get_moonraker_status()
     print_time = time.strftime('%H:%M:%S', time.gmtime(pd["print_stats"]["print_duration"]))
-    remaining_time = time.strftime('%H:%M:%S', time.gmtime(pd["print_stats"]["total_duration"]))
+    remaining_time = time.strftime('%H:%M:%S', time.gmtime(pd["metadata"]["estimated_time"]))
     percent_complete = int(100 * pd['display_status']['progress'])
 
     block_message = [{
@@ -106,8 +116,9 @@ def show_printer_status(client, message, say):
           "text": f":bed::thermometer: {round(pd['heater_bed']['temperature'],2)}° ({int(100 * pd['heater_bed']['power'])}%)\n\
 :syringe::thermometer: {round(pd['extruder']['temperature'],2)}° ({int(100 * pd['extruder']['power'])}%)\n\
 :round_pushpin:   x:{round(pd['toolhead']['position'][0],2)}mm y:{round(pd['toolhead']['position'][1],2)}mm z:{round(pd['toolhead']['position'][2],2)}mm e:{round(pd['toolhead']['position'][3],2)}mm \n\
-:clock3:   {print_time}/{remaining_time}\n\
-:thread:  {round(pd['print_stats']['filament_used'],2)}mm             "
+:cyclone:   {pd['fan']['speed']}%\n\
+:clock3:   {print_time} / {remaining_time}\n\
+:thread:  {round(pd['print_stats']['filament_used']/1000)}m / {round(pd['metadata']['filament_total']/1000)}m        "
         }
       },
       {
