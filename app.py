@@ -112,8 +112,8 @@ def show_printer_status(client, message, say):
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": f":bed::thermometer: {round(pd['heater_bed']['temperature'],2)}° ({int(100 * pd['heater_bed']['power'])}%)\n\
-:syringe::thermometer: {round(pd['extruder']['temperature'],2)}° ({int(100 * pd['extruder']['power'])}%)\n\
+          "text": f":bed::thermometer: {round(pd['heater_bed']['temperature'])}° ({int(100 * pd['heater_bed']['power'])}%)\n\
+:syringe::thermometer: {round(pd['extruder']['temperature'])}° ({int(100 * pd['extruder']['power'])}%)\n\
 :round_pushpin:   x:{round(pd['toolhead']['position'][0])} y:{round(pd['toolhead']['position'][1])} z:{round(pd['toolhead']['position'][2],2)}mm\n\
 :cyclone:   {int(100*pd['fan']['speed'])}%\n\
 :clock3:   {print_time} / {total_time}\n\
