@@ -70,9 +70,10 @@ def show_printer_status(client, message, say):
     ts = response['file']['shares']['public'][message['channel']][0]['ts']
 
     pd = get_moonraker_status()
-    print_time = time.strftime('%H:%M', time.gmtime(pd["print_stats"]["print_duration"]))
-    total_time = time.strftime('%H:%M', time.gmtime(pd["metadata"]["estimated_time"]))
-    remaining_time = time.strftime('%H:%M', time.gmtime(pd["metadata"]["estimated_time"] - pd["print_stats"]["print_duration"]))
+    print_time = time.strftime('%-H:%M', time.gmtime(pd["print_stats"]["print_duration"]))
+    actual_time = time.strftime('%-H:%M', time.gmtime(pd["print_stats"]["total_duration"]))
+    total_time = time.strftime('%-H:%M', time.gmtime(pd["metadata"]["estimated_time"]))
+    remaining_time = time.strftime('%-H:%M', time.gmtime(pd["metadata"]["estimated_time"] - pd["print_stats"]["print_duration"]))
     percent_complete = int(100 * pd['display_status']['progress'])
 
     block_message = [{
@@ -88,7 +89,7 @@ def show_printer_status(client, message, say):
         "elements": [
           {
             "type": "plain_text",
-            "text": f"Voron 2.4 - Print Time: {print_time}",
+            "text": f"Voron 2.4 - Print Time: {print_time} - Total Time: {actual_time}",
             "emoji": True
           }
         ]
@@ -106,9 +107,6 @@ def show_printer_status(client, message, say):
             "text": f"*Printbot* has an update for you <@{message['user']}>!"
           }
         ]
-      },
-      {
-        "type": "divider"
       },
       {
         "type": "section",
