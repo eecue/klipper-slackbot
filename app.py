@@ -9,6 +9,7 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 load_dotenv()
 
+# logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -41,13 +42,11 @@ def get_gcode_metadata(gcode_filename):
   # logger.error(json_data)
   return json_data
 
-
 # @app.command("/klipper")
 # def repeat_text(ack, say, command):
 #     # Acknowledge command request
 #     ack()
 #     say(f"{command['text']}")
-
 
 @app.message("status")
 def show_printer_status(client, message, say):
@@ -119,25 +118,67 @@ def show_printer_status(client, message, say):
 :clock3:   {print_time} / {total_time}\n\
 :thread:  {round(pd['print_stats']['filament_used']/1000)}m / {round(pd['metadata']['filament_total']/1000)}m        "
         }
-      },
-      {
-        "type": "section",
-        "text": {
-          "type": "mrkdwn",
-          "text": "Actions:"
-        },
-        "accessory": {
-          "type": "button",
-          "text": {
-            "type": "plain_text",
-            "text": "Pause",
-            "emoji": True
-          },
-          "value": "click_me_123",
-          "action_id": "button-action"
-        }
       }
     ]
+
+
+    action_message = [
+      {
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+          "action_id": "printer_action_pause",
+					"text": {
+						"type": "plain_text",
+						"emoji": True,
+						"text": ":double_vertical_bar: Pause"
+					},
+					"style": "primary",
+				},
+				{
+					"type": "button",
+          "action_id": "printer_action_resume",
+					"text": {
+						"type": "plain_text",
+						"emoji": True,
+						"text": ":black_right_pointing_triangle_with_double_vertical_bar: Resume"
+					},
+					"style": "primary",
+				},
+				{
+					"type": "button",
+          "action_id": "printer_action_cancel",
+          "text": {
+						"type": "plain_text",
+						"emoji": True,
+						"text": ":x: Cancel"
+					},
+					"style": "danger",
+					"value": "cancel_print"
+				},
+				{
+					"type": "button",
+          "action_id": "printer_action_stop",
+          "text": {
+						"type": "plain_text",
+						"emoji": True,
+						"text": ":octagonal_sign: Emergency STOP"
+					},
+					"style": "danger",
+					"value": "cancel_print"
+				}
+			]
+		}
+    ]
+
+    client.chat_postMessage(
+        channel=message["channel"],
+        # thread_ts=message_ts,
+        text="Printer actions",
+        blocks=action_message
+        # You could also use a blocks[] array to send richer content
+    )
 
     response = client.chat_update(
       channel=message["channel"],
@@ -157,6 +198,38 @@ def show_printer_status(client, message, say):
         channel=message["channel"],
         timestamp=message["ts"]
     )
+
+
+
+@app.action("printer_action_pause")
+def approve_request(ack, say):
+    # Acknowledge action request
+    ack()
+    requests.post(f"{moonraker_url}/printer/print/pause")
+    say(":printer: :double_vertical_bar:  Print Paused")
+
+@app.action("printer_action_resume")
+def approve_request(ack, say):
+    # Acknowledge action request
+    ack()
+    requests.post(f"{moonraker_url}/printer/print/resume")
+    say(":printer: :black_right_pointing_triangle_with_double_vertical_bar: Print Resumed")
+
+@app.action("printer_action_cancel")
+def approve_request(ack, say):
+    # Acknowledge action request
+    ack()
+    requests.post(f"{moonraker_url}/printer/print/cancel")
+    say(":printer: :x:   Print Cancelled")
+
+@app.action("printer_action_stop")
+def approve_request(ack, say):
+    # Acknowledge action request
+    ack()
+    requests.post(f"{moonraker_url}/printer/emergency_stop")
+    say(":printer: :octagonal_sign:   Print Stopped")
+
+
 
 
 @app.event("message")
@@ -219,39 +292,12 @@ def update_home_tab(client, event, logger):
   except Exception as e:
     logger.error(f"Error publishing home tab: {e}")
 
-# The open_modal shortcut listens to a shortcut with the callback_id "open_modal"
-@app.shortcut("open_modal")
-def open_modal(ack, shortcut, client):
-    # Acknowledge the shortcut request
+@app.action("print_control")
+def approve_request(ack, say):
+    # Acknowledge action request
     ack()
-    # Call the views_open method using the built-in WebClient
-    client.views_open(
-        trigger_id=shortcut["trigger_id"],
-        # A simple view payload for a modal
-        view={
-            "type": "modal",
-            "title": {"type": "plain_text", "text": "My App"},
-            "close": {"type": "plain_text", "text": "Close"},
-            "blocks": [
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "About the simplest modal you could conceive of :smile:\n\nMaybe <https://api.slack.com/reference/block-kit/interactive-components|*make the modal interactive*> or <https://api.slack.com/surfaces/modals/using#modifying|*learn more advanced modal use cases*>."
-                    }
-                },
-                {
-                    "type": "context",
-                    "elements": [
-                        {
-                            "type": "mrkdwn",
-                            "text": "Psssst this modal was designed using <https://api.slack.com/tools/block-kit-builder|*Block Kit Builder*>"
-                        }
-                    ]
-                }
-            ]
-        }
-    )
+    say("Request approved 👍")
+
 
 
 if __name__ == "__main__":
