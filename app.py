@@ -52,7 +52,7 @@ def get_gcode_metadata(gcode_filename):
 def show_printer_status(client, message, say):
  
     client.reactions_add(
-        name="hourglass",
+        name="traffic_light",
         channel=message["channel"],
         timestamp=message["ts"]
     )
@@ -153,10 +153,26 @@ def show_printer_status(client, message, say):
 						"type": "plain_text",
 						"emoji": True,
 						"text": ":x: Cancel"
-					},
-					"style": "danger",
-					"value": "cancel_print"
-				},
+					}, 
+          "confirm": {
+            "title": {
+                "type": "plain_text",
+                "text": "Are you sure?"
+            },
+            "text": {
+                "type": "mrkdwn",
+                "text": "This will *cancel the print*!"
+            },
+            "confirm": {
+                "type": "plain_text",
+                "text": "CANCEL PRINT"
+            },
+            "deny": {
+                "type": "plain_text",
+                "text": "Stop, I've changed my mind!"
+            },
+          },   
+        },
 				{
 					"type": "button",
           "action_id": "printer_action_stop",
@@ -164,13 +180,34 @@ def show_printer_status(client, message, say):
 						"type": "plain_text",
 						"emoji": True,
 						"text": ":octagonal_sign: Emergency STOP"
-					},
+					}, 
+          "confirm": {
+            "title": {
+                "type": "plain_text",
+                "text": "Are you sure?"
+            },
+            "text": {
+                "type": "mrkdwn",
+                "text": "This will *halt the printer*!"
+            },
+            "confirm": {
+                "type": "plain_text",
+                "text": "EMERGENCY STOP PRINT"
+            },
+            "deny": {
+                "type": "plain_text",
+                "text": "Stop, I've changed my mind!"
+            },
+          },   
 					"style": "danger",
 					"value": "cancel_print"
 				}
 			]
 		}
     ]
+
+
+
 
     client.chat_postMessage(
         channel=message["channel"],
@@ -194,7 +231,7 @@ def show_printer_status(client, message, say):
     )
 
     client.reactions_remove(
-        name="hourglass",
+        name="traffic_light",
         channel=message["channel"],
         timestamp=message["ts"]
     )
